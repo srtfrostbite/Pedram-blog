@@ -14,6 +14,9 @@ import os
 import smtplib
 
 
+year = date.today().strftime("%Y")
+
+
 OWN_EMAIL = os.environ.get('MY_EMAIL')
 OWN_PASSWORD = os.environ.get('EMAIL_PASS')
 
@@ -139,7 +142,7 @@ def load_user(user_id):
 @app.route('/')
 def get_all_posts():
     posts = BlogPost.query.all()
-    return render_template("index.html", all_posts=posts, user=current_user)
+    return render_template("index.html", all_posts=posts, user=current_user, year=year)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -172,7 +175,7 @@ def register():
 
             return redirect(url_for("get_all_posts"))
 
-    return render_template("register.html", form=register_form)
+    return render_template("register.html", form=register_form, year=year)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -194,7 +197,7 @@ def login():
             flash("You are not registered. Please register first.")
             return redirect(url_for('login'))
 
-    return render_template("login.html", form=login_form)
+    return render_template("login.html", form=login_form, year=year)
 
 
 @app.route('/logout')
@@ -221,28 +224,29 @@ def show_post(post_id):
         )
         db.session.add(new_comment)
         db.session.commit()
-        send_email(
-            current_user["name"],
-            current_user["email"],
-            f"Commented on page{requested_post.title}",
-            comment_form.comment.data
-        )
 
-    return render_template("post.html", post=requested_post, user=current_user, form=comment_form)
+        # send_email(
+        #     current_user["name"],
+        #     current_user["email"],
+        #     f"Commented on page{requested_post.title}",
+        #     comment_form.comment.data
+        # )
+
+    return render_template("post.html", post=requested_post, user=current_user, form=comment_form, year=year)
 
 
 @app.route("/about")
 def about():
-    return render_template("about.html")
+    return render_template("about.html", year=year)
 
 
 @app.route("/contact", methods=["GET", "POST"])
 def contact():
-    if request.method == "POST":
-        data = request.form
-        send_email(data["name"], data["email"], data["phone"], data["message"])
-        return render_template("contact.html", msg_sent=True)
-    return render_template("contact.html", msg_sent=False)
+    # if request.method == "POST":
+    #     data = request.form
+    #     send_email(data["name"], data["email"], data["phone"], data["message"])
+    #     return render_template("contact.html", msg_sent=True)
+    return render_template("contact.html", msg_sent=False, year=year)
 
 
 def send_email(name, email, phone, message):
@@ -271,7 +275,7 @@ def add_new_post():
         db.session.commit()
         return redirect(url_for("get_all_posts"))
 
-    return render_template("make-post.html", form=form, current_user=current_user)
+    return render_template("make-post.html", form=form, current_user=current_user, year=year)
 
 
 @app.route("/edit-post/<int:post_id>", methods=["GET", "POST"])
@@ -295,7 +299,7 @@ def edit_post(post_id):
         db.session.commit()
         return redirect(url_for("show_post", post_id=post.id))
 
-    return render_template("make-post.html", form=edit_form, is_edit=True, current_user=current_user)
+    return render_template("make-post.html", form=edit_form, is_edit=True, current_user=current_user, year=year)
 
 
 @app.route("/delete/<int:post_id>")
