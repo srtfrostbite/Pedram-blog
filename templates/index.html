@@ -7,7 +7,7 @@
       <div class="row">
         <div class="col-lg-8 col-md-10 mx-auto">
           <div class="site-heading">
-            <h1>Angela's Blog</h1>
+            <h1>Pedram's Blog</h1>
             <span class="subheading">A collection of random musings.</span>
           </div>
         </div>
@@ -30,7 +30,7 @@
             </h3>
           </a>
           <p class="post-meta">Posted by
-            <a href="#">
+            <a href="{{ url_for('about') }}">
 <!--            #Changed from post.author as post.author is now a User object.-->
               {{post.author.name}}
             </a>

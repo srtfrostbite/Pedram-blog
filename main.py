@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash, abort
+from flask import Flask, render_template, redirect, url_for, flash, abort, request
 from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
 from datetime import date
@@ -11,6 +11,11 @@ from flask_gravatar import Gravatar
 from functools import wraps
 import bleach
 import os
+import smtplib
+
+
+OWN_EMAIL = os.environ.get('MY_EMAIL')
+OWN_PASSWORD = os.environ.get('EMAIL_PASS')
 
 
 app = Flask(__name__)
@@ -216,6 +221,12 @@ def show_post(post_id):
         )
         db.session.add(new_comment)
         db.session.commit()
+        send_email(
+            current_user["name"],
+            current_user["email"],
+            f"Commented on page{requested_post.title}",
+            comment_form.comment.data
+        )
 
     return render_template("post.html", post=requested_post, user=current_user, form=comment_form)
 
@@ -225,9 +236,21 @@ def about():
     return render_template("about.html")
 
 
-@app.route("/contact")
+@app.route("/contact", methods=["GET", "POST"])
 def contact():
-    return render_template("contact.html")
+    if request.method == "POST":
+        data = request.form
+        send_email(data["name"], data["email"], data["phone"], data["message"])
+        return render_template("contact.html", msg_sent=True)
+    return render_template("contact.html", msg_sent=False)
+
+
+def send_email(name, email, phone, message):
+    email_message = f"Subject:New Message\n\nName: {name}\nEmail: {email}\nPhone: {phone}\nMessage:{message}"
+    with smtplib.SMTP("smtp.gmail.com") as connection:
+        connection.starttls()
+        connection.login(OWN_EMAIL, OWN_PASSWORD)
+        connection.sendmail(OWN_EMAIL, OWN_EMAIL, email_message)
 
 
 @app.route("/new-post", methods=['GET', 'POST'])
